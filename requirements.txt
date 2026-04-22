@@ -1,4 +1,5 @@
 streamlit
-streamlit-reader
+streamlit-camera-input-live
+opencv-python-headless
 gspread
 google-auth
