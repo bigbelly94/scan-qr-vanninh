@@ -1,5 +1,5 @@
 streamlit
-streamlit-qr-scanner
+streamlit-camera-input-live
 pdfplumber
 requests
 gspread
