@@ -1,0 +1,6 @@
+streamlit
+streamlit-qr-scanner
+pdfplumber
+requests
+gspread
+google-auth
