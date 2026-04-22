@@ -1,14 +1,14 @@
 import streamlit as st
 import gspread
 from google.oauth2.service_account import Credentials
-from streamlit_qr_scanner import streamlit_qr_scanner
+from streamlit_reader import pwa_install_button, qr_scanner # Thư viện quét QR ổn định
 
 st.set_page_config(page_title="Quét QR Vạn Ninh", layout="centered")
 
 # --- KẾT NỐI GOOGLE SHEETS ---
 def get_gspread_client():
+    # Lấy thông tin từ Secrets (Bạn nhớ dùng định dạng 3 dấu ngoặc kép """ như mình hướng dẫn nhé)
     creds_dict = dict(st.secrets["gcp_service_account"])
-    # Không cần replace \n nữa vì ta dùng định dạng """ trong Secrets
     scope = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
     creds = Credentials.from_service_account_info(creds_dict, scopes=scope)
     return gspread.authorize(creds)
@@ -16,39 +16,35 @@ def get_gspread_client():
 SHEET_ID = "1me6PI665ZLycG2D4pCn0uVpVtCFTfcZaRR7m7KzqDXg"
 
 st.title("📷 Quét QR Hợp Đồng")
-st.write("Đưa mã QR vào khung camera bên dưới")
+st.write("Đưa mã QR vào khung camera")
 
 # --- CAMERA QUÉT QR ---
-# Component này sẽ tự động trả về nội dung của QR khi tìm thấy
-qr_code_content = streamlit_qr_scanner(key='qr_scanner')
+# Component này sẽ tự động hiện khung camera và trả về data ngay khi nhận diện được
+qr_data = qr_scanner()
 
-if qr_code_content:
-    st.audio("https://www.soundjay.com/buttons/beep-07.mp3") # Thêm tiếng beep cho vui tai
-    st.success(f"Đã quét thành công mã QR!")
-    
-    # Tách lấy Contract ID từ Link
+if qr_data:
+    # Tự động tách ID từ link
     contract_id = ""
-    if "enContractId=" in qr_code_content:
-        contract_id = qr_code_content.split("enContractId=")[-1]
+    if "enContractId=" in qr_data:
+        contract_id = qr_data.split("enContractId=")[-1]
     else:
-        contract_id = qr_code_content
-        
-    st.code(f"ID bắt được: {contract_id}")
+        contract_id = qr_data
+    
+    st.success(f"🎯 Đã bắt được ID: {contract_id}")
 
     # Nút bấm lưu
-    if st.button("🚀 LƯU VÀO GOOGLE SHEETS"):
+    if st.button("🚀 XÁC NHẬN LƯU VÀO SHEET"):
         try:
             client = get_gspread_client()
             sheet = client.open_by_key(SHEET_ID).sheet1
             
-            # Lưu ID vào cột đầu tiên
+            # Lưu ID vào cột mới
             sheet.append_row([contract_id])
             
             st.balloons()
-            st.success(f"Đã lưu ID {contract_id} vào Sheet!")
+            st.success("Đã ghi vào Google Sheets thành công!")
         except Exception as e:
             st.error(f"Lỗi: {e}")
 
-# Nút để reset lại camera nếu muốn quét tiếp cái khác
-if st.button("Quét mã khác"):
-    st.rerun()
+# Tiện ích: Nút cài đặt app vào màn hình chính điện thoại cho vợ
+pwa_install_button()
